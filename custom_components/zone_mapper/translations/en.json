@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/ApolloAutomation/zone-mapper",
+                "description": "If you need help with the configuration check out the Apollo Automation Zone Mapper GitHub repository or Discord",
                 "data": {
                     "username": "Username",
                     "password": "Password"
