@@ -4,8 +4,7 @@
 
 Backend for the Zone Mapper Lovelace card. Persists zone definitions and exposes per‑zone occupancy sensors based on tracked X/Y entities.
 
-> [!WARNING]
-> This integration requires the Zone Mapper lovelace card for functionality. Install it from HACS or from [the repository.](https://github.com/ApolloAutomation/zone-mapper-card)
+Starting with 1.1.0, this integration seeds a "Zone Mapper" view with the card on your default dashboard the first time it's set up, so you don't have to drop the card in by hand. The companion [Zone Mapper card](https://github.com/ApolloAutomation/zone-mapper-card) still needs to be installed separately via HACS.
 
 ## Features
 
@@ -14,10 +13,9 @@ Backend for the Zone Mapper Lovelace card. Persists zone definitions and exposes
 - Restores zones, tracked entities, and rotation after Home Assistant restarts
 - Listens for and processes updates from the card via a single service
 - Auto‑discovers and (re)loads platforms at startup based on existing entities
+- Seeds a "Zone Mapper" view with the card on the default dashboard the first time the integration is set up (storage‑mode dashboards only, opt‑out available in integration options)
 
 ## Installation
-
-There are two ways to install this integration. Both this integration and [the lovelace card](https://github.com/ApolloAutomation/zone-mapper-card) **must** be installed
 
 ### With HACS (Recommended)
 
@@ -28,27 +26,22 @@ HACS is like an app store for Home Assistant. It makes installing and updating c
   - If HACS is not installed yet, download it following the instructions on [https://hacs.xyz/docs/use/download/download/](https://hacs.xyz/docs/use/download/download/)
   - Follow the HACS initial configuration guide at [https://hacs.xyz/docs/configuration/basic](https://hacs.xyz/docs/configuration/basic)
 
-- **Add this custom repository to HACS:**
+- **Add both custom repositories to HACS:**
 
   - Go to `HACS` in your Home Assistant sidebar
-  - CLick on the 3 dots in the upper right corner
+  - Click on the 3 dots in the upper right corner
   - Click "Custom repositories"
-  - Add this URL to the repository: [https://github.com/ApolloAutomation/zone-mapper](https://github.com/ApolloAutomation/zone-mapper)
-  - Select `Integration` for the type
-  - Click the `ADD` button
+  - Add this URL as type `Integration`: [https://github.com/ApolloAutomation/zone-mapper](https://github.com/ApolloAutomation/zone-mapper)
+  - Add this URL as type `Dashboard`: [https://github.com/ApolloAutomation/zone-mapper-card](https://github.com/ApolloAutomation/zone-mapper-card)
 
 - **Install Zone Mapper:**
 
-  - Go to `HACS` in your Home Assistant sidebar
-  - Search for `Zone Mapper` in HACS
-  - Click on the card when you find it
-  - Click the `Download` button at the bottom right
-  - Repeat for lovelace card
-  - Restart Home Assistant
-  - Go to `Devices and Services`
+  - In HACS, search for `Zone Mapper` and download both the integration and the card
+  - Restart Home Assistant when prompted
+  - Go to `Settings` → `Devices and Services`
   - Click `Add Integration`
-  - Search `Zone Mapper`
-  - Add `Zone Mapper`
+  - Search `Zone Mapper` and add it
+  - Open the new "Zone Mapper" view on your default dashboard, pick the device and target entities on the card, and start drawing
 
 ### Manual Installation
 
@@ -58,7 +51,7 @@ HACS is like an app store for Home Assistant. It makes installing and updating c
 /config/custom_components/zone_mapper
 ```
 
-2. Add entry to your `configuration.yaml`:
+2. (Optional) add entry to your `configuration.yaml` if you want YAML-mode setup:
 
 ```yaml
 zone_mapper:
@@ -66,7 +59,7 @@ zone_mapper:
 
 3. Restart Home Assistant.
 
-4. Companion card: download `zone-mapper-card.js` from [the card repo](https://github.com/ApolloAutomation/zone-mapper-card) under `/config/www` and add it as a Dashboard Resource.
+4. Install the companion [Zone Mapper card](https://github.com/ApolloAutomation/zone-mapper-card) (download `zone-mapper-card.js` to `/config/www` and add it as a Dashboard Resource).
 
 ## Troubleshooting
 

@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/ApolloAutomation/zone-mapper",
+                "description": "Create the Zone Mapper entry. On first setup, a Zone Mapper view with the card is added to your default dashboard unless you turn that off in the integration options afterwards.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
@@ -23,6 +23,20 @@
         },
         "abort": {
             "already_configured": "This entry is already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Zone Mapper options",
+                "description": "Configure first-run behavior.",
+                "data": {
+                    "auto_create_view": "Auto-create a Zone Mapper view on first setup"
+                },
+                "data_description": {
+                    "auto_create_view": "Appends a 'Zone Mapper' view with the card to your default dashboard the first time this integration is set up. Turn off before adding the integration to skip this. Once the view is created (or skipped), it won't be re-added."
+                }
+            }
         }
     },
     "exceptions": {
