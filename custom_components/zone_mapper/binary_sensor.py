@@ -26,6 +26,7 @@ from .const import (
     ATTR_CX,
     ATTR_CY,
     ATTR_DATA,
+    ATTR_INPUT_UNITS,
     ATTR_POINTS,
     ATTR_ROTATION_DEG,
     ATTR_RX,
@@ -50,6 +51,25 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 _LINE_INTERSECTION_EPSILON = 1e-12
+_UNIT_ALIASES = {
+    "millimeter": "mm",
+    "millimeters": "mm",
+    "millimetre": "mm",
+    "millimetres": "mm",
+    "centimeter": "cm",
+    "centimeters": "cm",
+    "centimetre": "cm",
+    "centimetres": "cm",
+    "meter": "m",
+    "meters": "m",
+    "metre": "m",
+    "metres": "m",
+    "inch": "in",
+    "inches": "in",
+    "foot": "ft",
+    "feet": "ft",
+}
+_UNIT_TO_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0, "in": 25.4, "ft": 304.8}
 
 ShapeData = Mapping[str, Any] | None
 ShapeTester = Callable[[float, float, ShapeData], bool]
@@ -62,6 +82,27 @@ def _coerce_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _normalize_unit(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    unit = value.strip().lower()
+    unit = _UNIT_ALIASES.get(unit, unit)
+    return unit if unit in _UNIT_TO_MM else None
+
+
+def _convert_to_mm(value: Any, unit: Any) -> float | None:
+    numeric = _coerce_float(value)
+    normalized_unit = _normalize_unit(unit)
+    if numeric is None or normalized_unit is None:
+        return None
+    return numeric * _UNIT_TO_MM[normalized_unit]
+
+
+def _state_unit(state: State, fallback_unit: Any) -> str:
+    state_unit = _normalize_unit(state.attributes.get("unit_of_measurement"))
+    return state_unit or _normalize_unit(fallback_unit) or "mm"
 
 
 def _slugify_location(location: str) -> str:
@@ -314,7 +355,7 @@ class ZonePresenceBinarySensor(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        zone_def, rotation_raw = self._resolve_zone_definition()
+        zone_def, rotation_raw, input_units = self._resolve_zone_definition()
 
         if not self._tracked_entities or zone_def is None:
             self._is_on = False
@@ -332,7 +373,7 @@ class ZonePresenceBinarySensor(BinarySensorEntity):
 
         rotate_point = _build_point_rotator(rotation_raw)
 
-        for x_val, y_val in self._iter_rotated_coordinates(rotate_point):
+        for x_val, y_val in self._iter_rotated_coordinates(rotate_point, input_units):
             if shape_tester(x_val, y_val, data):
                 self._is_on = True
                 return
@@ -352,16 +393,18 @@ class ZonePresenceBinarySensor(BinarySensorEntity):
                 yield x_id, y_id
 
     def _iter_rotated_coordinates(
-        self, rotate: Callable[[float, float], tuple[float, float]]
+        self,
+        rotate: Callable[[float, float], tuple[float, float]],
+        input_units: Any,
     ) -> Iterator[tuple[float, float]]:
         for x_id, y_id in self._iter_tracked_entity_pairs():
-            coords = self._get_coordinate_pair(x_id, y_id)
+            coords = self._get_coordinate_pair(x_id, y_id, input_units)
             if coords is None:
                 continue
             yield rotate(*coords)
 
     def _get_coordinate_pair(
-        self, x_entity_id: str, y_entity_id: str
+        self, x_entity_id: str, y_entity_id: str, input_units: Any
     ) -> tuple[float, float] | None:
         x_state = self.hass.states.get(x_entity_id)
         y_state = self.hass.states.get(y_entity_id)
@@ -369,16 +412,16 @@ class ZonePresenceBinarySensor(BinarySensorEntity):
             return None
         if x_state is None or y_state is None:
             return None
-        try:
-            x_val = float(x_state.state)
-            y_val = float(y_state.state)
-        except (TypeError, ValueError):
+        x_unit = _state_unit(x_state, input_units)
+        y_unit = _state_unit(y_state, input_units)
+        x_val = _convert_to_mm(x_state.state, x_unit)
+        y_val = _convert_to_mm(y_state.state, y_unit)
+        if x_val is None or y_val is None:
             return None
-        else:
-            # Ignore origin (0,0) so default or uninitialized readings are skipped.
-            if x_val == 0.0 and y_val == 0.0:
-                return None
-            return x_val, y_val
+        # Ignore origin (0,0) so default or uninitialized readings are skipped.
+        if x_val == 0.0 and y_val == 0.0:
+            return None
+        return x_val, y_val
 
     @staticmethod
     def _states_are_valid(x_state: State | None, y_state: State | None) -> bool:
@@ -389,12 +432,14 @@ class ZonePresenceBinarySensor(BinarySensorEntity):
             and y_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         )
 
-    def _resolve_zone_definition(self) -> tuple[Mapping[str, Any] | None, Any]:
+    def _resolve_zone_definition(
+        self,
+    ) -> tuple[Mapping[str, Any] | None, Any, Any]:
         integration = self.hass.data.get(DOMAIN, {})
         locations = integration.get(DATA_LOCATIONS, {})
         device_store = locations.get(self._location_name, {})
         if not isinstance(device_store, Mapping):
-            return None, None
+            return None, None, None
         zone_store = device_store.get(STORE_ZONES, {})
         if isinstance(zone_store, Mapping):
             zone_def = zone_store.get(self._zone_id)
@@ -404,4 +449,5 @@ class ZonePresenceBinarySensor(BinarySensorEntity):
         return (
             resolved_zone,
             device_store.get(ATTR_ROTATION_DEG),
+            device_store.get(ATTR_INPUT_UNITS),
         )

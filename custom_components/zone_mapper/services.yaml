@@ -56,6 +56,18 @@ update_zone:
           min: -180
           max: 180
           step: 1
+    input_units:
+      name: Input units
+      description: Optional units used by tracked X/Y entities. Entity unit metadata takes precedence; values are converted to millimetres for zone evaluation.
+      required: false
+      selector:
+        select:
+          options:
+            - mm
+            - cm
+            - m
+            - in
+            - ft
     entities:
       name: Tracked Entities
       description: Optional list of x/y entity id pairs to evaluate presence. Location-wide; replaces the list for this location.

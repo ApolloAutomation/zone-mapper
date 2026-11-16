@@ -14,6 +14,7 @@ from homeassistant.util import slugify
 
 from .const import (
     ATTR_DATA,
+    ATTR_INPUT_UNITS,
     ATTR_NAME,
     ATTR_ROTATION_DEG,
     ATTR_SHAPE,
@@ -23,6 +24,7 @@ from .const import (
     EVENT_ZONE_UPDATED,
     STORE_ENTITIES,
     STORE_ZONES,
+    SUPPORTED_INPUT_UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,6 +163,10 @@ class ZoneCoordsSensor(RestoreEntity, SensorEntity):
         if rotation is not None:
             base[ATTR_ROTATION_DEG] = rotation
 
+        input_units = loc.get(ATTR_INPUT_UNITS)
+        if input_units in SUPPORTED_INPUT_UNITS:
+            base[ATTR_INPUT_UNITS] = input_units
+
         zones = loc.get(STORE_ZONES, {})
         zone_def = zones.get(self._zone_id) if isinstance(zones, Mapping) else None
         name = zone_def.get(ATTR_NAME) if isinstance(zone_def, Mapping) else None
@@ -195,6 +201,7 @@ class ZoneCoordsSensor(RestoreEntity, SensorEntity):
             data = last_state.attributes.get(ATTR_DATA)
             entities = _normalize_entity_pairs(last_state.attributes.get("entities"))
             rotation = last_state.attributes.get(ATTR_ROTATION_DEG)
+            input_units = last_state.attributes.get(ATTR_INPUT_UNITS)
             zname = last_state.attributes.get(ATTR_NAME)
 
             # Seed hass.data so binary sensors can evaluate immediately
@@ -208,6 +215,8 @@ class ZoneCoordsSensor(RestoreEntity, SensorEntity):
             if rotation is not None:
                 with suppress(TypeError, ValueError):
                     store[ATTR_ROTATION_DEG] = round(float(rotation))
+            if input_units in SUPPORTED_INPUT_UNITS:
+                store[ATTR_INPUT_UNITS] = input_units
 
             # Cache locally for our attributes
             self._coords = {ATTR_SHAPE: shape, ATTR_DATA: data}

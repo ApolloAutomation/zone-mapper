@@ -30,6 +30,7 @@ ATTR_CY = "cy"
 ATTR_RX = "rx"
 ATTR_RY = "ry"
 ATTR_ROTATION_DEG = "rotation_deg"
+ATTR_INPUT_UNITS = "input_units"
 ATTR_NAME = "name"
 
 # Shapes
@@ -38,6 +39,7 @@ SHAPE_ELLIPSE = "ellipse"
 SHAPE_POLYGON = "polygon"
 SHAPE_NONE = "none"
 SUPPORTED_SHAPES = (SHAPE_NONE, SHAPE_RECT, SHAPE_ELLIPSE, SHAPE_POLYGON)
+SUPPORTED_INPUT_UNITS = ("mm", "cm", "m", "in", "ft")
 
 # Limits / defaults
 POLYGON_MAX_POINTS = 32

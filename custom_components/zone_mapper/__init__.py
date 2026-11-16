@@ -24,6 +24,7 @@ from .const import (
     ATTR_CX,
     ATTR_CY,
     ATTR_DATA,
+    ATTR_INPUT_UNITS,
     ATTR_NAME,
     ATTR_POINTS,
     ATTR_ROTATION_DEG,
@@ -52,6 +53,7 @@ from .const import (
     SHAPE_RECT,
     STORE_ENTITIES,
     STORE_ZONES,
+    SUPPORTED_INPUT_UNITS,
     SUPPORTED_SHAPES,
     WARN_ELLIPSE_INVALID,
     WARN_ELLIPSE_NON_POSITIVE,
@@ -394,6 +396,7 @@ def _build_update_zone_handler(
         data = call.data.get("data")
         entities = _normalize_entities(call.data.get("entities"))
         rotation = _sanitize_rotation(call.data.get(ATTR_ROTATION_DEG))
+        input_units = call.data.get(ATTR_INPUT_UNITS)
         zone_name = _coerce_zone_name(call.data.get("name"))
         delete_zone = bool(call.data.get("delete"))
 
@@ -404,6 +407,8 @@ def _build_update_zone_handler(
 
         if entities is not None:
             store[STORE_ENTITIES] = entities
+        if input_units in SUPPORTED_INPUT_UNITS:
+            store[ATTR_INPUT_UNITS] = input_units
 
         if delete_zone and zone_id is not None:
             _remove_zone(hass, location, zone_id)
@@ -458,6 +463,7 @@ UPDATE_ZONE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("shape"): vol.In(list(SUPPORTED_SHAPES)),
         vol.Optional("data"): vol.Any(None, dict),
         vol.Optional(ATTR_ROTATION_DEG): vol.Coerce(float),
+        vol.Optional(ATTR_INPUT_UNITS): vol.In(list(SUPPORTED_INPUT_UNITS)),
         vol.Optional("name"): cv.string,
         vol.Optional("delete"): cv.boolean,
         vol.Optional("entities"): vol.All(
